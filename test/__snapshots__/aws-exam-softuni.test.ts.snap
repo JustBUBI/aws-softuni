@@ -1,0 +1,567 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Lambda Function Created 1`] = `
+{
+  "Outputs": {
+    "DynamoDBTableName": {
+      "Value": {
+        "Ref": "FileMetadataTableE69EBE66",
+      },
+    },
+    "FileUploadApiEndpoint576839AA": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "FileUploadApiAF719C21",
+            },
+            ".execute-api.",
+            {
+              "Ref": "AWS::Region",
+            },
+            ".",
+            {
+              "Ref": "AWS::URLSuffix",
+            },
+            "/",
+            {
+              "Ref": "FileUploadApiDeploymentStageprodBBFEA435",
+            },
+            "/",
+          ],
+        ],
+      },
+    },
+    "RestApiEndpoint": {
+      "Value": {
+        "Fn::Join": [
+          "",
+          [
+            "https://",
+            {
+              "Ref": "FileUploadApiAF719C21",
+            },
+            ".execute-api.eu-central-1.amazonaws.com/prod/fileUpload",
+          ],
+        ],
+      },
+    },
+  },
+  "Resources": {
+    "FileMetadataTableE69EBE66": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AttributeDefinitions": [
+          {
+            "AttributeName": "fileExtension",
+            "AttributeType": "S",
+          },
+          {
+            "AttributeName": "id",
+            "AttributeType": "S",
+          },
+        ],
+        "BillingMode": "PAY_PER_REQUEST",
+        "KeySchema": [
+          {
+            "AttributeName": "fileExtension",
+            "KeyType": "HASH",
+          },
+          {
+            "AttributeName": "id",
+            "KeyType": "RANGE",
+          },
+        ],
+        "StreamSpecification": {
+          "StreamViewType": "NEW_IMAGE",
+        },
+        "TableName": "FileMetadataTable",
+        "TimeToLiveSpecification": {
+          "AttributeName": "ttl",
+          "Enabled": true,
+        },
+      },
+      "Type": "AWS::DynamoDB::Table",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "FileUploadApiAF719C21": {
+      "Properties": {
+        "BinaryMediaTypes": [
+          "multipart/form-data",
+        ],
+        "Name": "FileUploadApi",
+      },
+      "Type": "AWS::ApiGateway::RestApi",
+    },
+    "FileUploadApiAccount46713139": {
+      "DeletionPolicy": "Retain",
+      "DependsOn": [
+        "FileUploadApiAF719C21",
+      ],
+      "Properties": {
+        "CloudWatchRoleArn": {
+          "Fn::GetAtt": [
+            "FileUploadApiCloudWatchRole604D67EC",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::ApiGateway::Account",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "FileUploadApiCloudWatchRole604D67EC": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "apigateway.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AmazonAPIGatewayPushToCloudWatchLogs",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "FileUploadApiDeployment1DF15B338d489ba3a2ec552a37c68ba98a35a27c": {
+      "DependsOn": [
+        "FileUploadApifileUploadPOSTE2FA81B8",
+        "FileUploadApifileUpload264E1C13",
+      ],
+      "Properties": {
+        "Description": "Automatically created by the RestApi construct",
+        "RestApiId": {
+          "Ref": "FileUploadApiAF719C21",
+        },
+      },
+      "Type": "AWS::ApiGateway::Deployment",
+    },
+    "FileUploadApiDeploymentStageprodBBFEA435": {
+      "DependsOn": [
+        "FileUploadApiAccount46713139",
+      ],
+      "Properties": {
+        "DeploymentId": {
+          "Ref": "FileUploadApiDeployment1DF15B338d489ba3a2ec552a37c68ba98a35a27c",
+        },
+        "RestApiId": {
+          "Ref": "FileUploadApiAF719C21",
+        },
+        "StageName": "prod",
+      },
+      "Type": "AWS::ApiGateway::Stage",
+    },
+    "FileUploadApifileUpload264E1C13": {
+      "Properties": {
+        "ParentId": {
+          "Fn::GetAtt": [
+            "FileUploadApiAF719C21",
+            "RootResourceId",
+          ],
+        },
+        "PathPart": "fileUpload",
+        "RestApiId": {
+          "Ref": "FileUploadApiAF719C21",
+        },
+      },
+      "Type": "AWS::ApiGateway::Resource",
+    },
+    "FileUploadApifileUploadPOSTApiPermissionMyTestStackFileUploadApiF8046F6DPOSTfileUploadB3EC8B6A": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "fileUploadFunction9C6A2901",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "FileUploadApiAF719C21",
+              },
+              "/",
+              {
+                "Ref": "FileUploadApiDeploymentStageprodBBFEA435",
+              },
+              "/POST/fileUpload",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "FileUploadApifileUploadPOSTApiPermissionTestMyTestStackFileUploadApiF8046F6DPOSTfileUpload3B665A97": {
+      "Properties": {
+        "Action": "lambda:InvokeFunction",
+        "FunctionName": {
+          "Fn::GetAtt": [
+            "fileUploadFunction9C6A2901",
+            "Arn",
+          ],
+        },
+        "Principal": "apigateway.amazonaws.com",
+        "SourceArn": {
+          "Fn::Join": [
+            "",
+            [
+              "arn:",
+              {
+                "Ref": "AWS::Partition",
+              },
+              ":execute-api:",
+              {
+                "Ref": "AWS::Region",
+              },
+              ":",
+              {
+                "Ref": "AWS::AccountId",
+              },
+              ":",
+              {
+                "Ref": "FileUploadApiAF719C21",
+              },
+              "/test-invoke-stage/POST/fileUpload",
+            ],
+          ],
+        },
+      },
+      "Type": "AWS::Lambda::Permission",
+    },
+    "FileUploadApifileUploadPOSTE2FA81B8": {
+      "Properties": {
+        "AuthorizationType": "NONE",
+        "HttpMethod": "POST",
+        "Integration": {
+          "IntegrationHttpMethod": "POST",
+          "Type": "AWS_PROXY",
+          "Uri": {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":apigateway:",
+                {
+                  "Ref": "AWS::Region",
+                },
+                ":lambda:path/2015-03-31/functions/",
+                {
+                  "Fn::GetAtt": [
+                    "fileUploadFunction9C6A2901",
+                    "Arn",
+                  ],
+                },
+                "/invocations",
+              ],
+            ],
+          },
+        },
+        "ResourceId": {
+          "Ref": "FileUploadApifileUpload264E1C13",
+        },
+        "RestApiId": {
+          "Ref": "FileUploadApiAF719C21",
+        },
+      },
+      "Type": "AWS::ApiGateway::Method",
+    },
+    "FileUploadTopicC783A9A8": {
+      "Properties": {
+        "DisplayName": "FileUploadTopic",
+      },
+      "Type": "AWS::SNS::Topic",
+    },
+    "FileUploadTopiclyubomir555gmailcomD063FD13": {
+      "Properties": {
+        "Endpoint": "lyubomir555@gmail.com",
+        "Protocol": "email",
+        "TopicArn": {
+          "Ref": "FileUploadTopicC783A9A8",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
+    },
+    "fileUploadFunction9C6A2901": {
+      "DependsOn": [
+        "fileUploadFunctionServiceRoleDefaultPolicyDD61E3AB",
+        "fileUploadFunctionServiceRole66464561",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "0e968721c741a990411e6295a31cb89f7344dd7cd94eb6d2f0978f62b87a2038.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "TABLE_NAME": {
+              "Ref": "FileMetadataTableE69EBE66",
+            },
+            "TOPIC_ARN": {
+              "Ref": "FileUploadTopicC783A9A8",
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "fileUploadFunctionServiceRole66464561",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "fileUploadFunctionServiceRole66464561": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "fileUploadFunctionServiceRoleDefaultPolicyDD61E3AB": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "dynamodb:BatchGetItem",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+                "dynamodb:Query",
+                "dynamodb:GetItem",
+                "dynamodb:Scan",
+                "dynamodb:ConditionCheckItem",
+                "dynamodb:BatchWriteItem",
+                "dynamodb:PutItem",
+                "dynamodb:UpdateItem",
+                "dynamodb:DeleteItem",
+                "dynamodb:DescribeTable",
+              ],
+              "Effect": "Allow",
+              "Resource": [
+                {
+                  "Fn::GetAtt": [
+                    "FileMetadataTableE69EBE66",
+                    "Arn",
+                  ],
+                },
+                {
+                  "Ref": "AWS::NoValue",
+                },
+              ],
+            },
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "FileUploadTopicC783A9A8",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "fileUploadFunctionServiceRoleDefaultPolicyDD61E3AB",
+        "Roles": [
+          {
+            "Ref": "fileUploadFunctionServiceRole66464561",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "metadataStoredFunctionC2AEA409": {
+      "DependsOn": [
+        "metadataStoredFunctionServiceRoleDefaultPolicy87D67872",
+        "metadataStoredFunctionServiceRole7F877B8D",
+      ],
+      "Properties": {
+        "Code": {
+          "S3Bucket": {
+            "Fn::Sub": "cdk-hnb659fds-assets-\${AWS::AccountId}-\${AWS::Region}",
+          },
+          "S3Key": "4db37bb5f57e1692bcd90e2701e1be11c45dcb780442654ed704a4f10b8b2db7.zip",
+        },
+        "Environment": {
+          "Variables": {
+            "TOPIC_ARN": {
+              "Ref": "FileUploadTopicC783A9A8",
+            },
+          },
+        },
+        "Handler": "index.handler",
+        "Role": {
+          "Fn::GetAtt": [
+            "metadataStoredFunctionServiceRole7F877B8D",
+            "Arn",
+          ],
+        },
+        "Runtime": "nodejs20.x",
+      },
+      "Type": "AWS::Lambda::Function",
+    },
+    "metadataStoredFunctionDynamoDBEventSourceMyTestStackFileMetadataTable3613388673EC8A8C": {
+      "Properties": {
+        "BatchSize": 5,
+        "EventSourceArn": {
+          "Fn::GetAtt": [
+            "FileMetadataTableE69EBE66",
+            "StreamArn",
+          ],
+        },
+        "FilterCriteria": {
+          "Filters": [
+            {
+              "Pattern": "{"eventName":["INSERT"]}",
+            },
+          ],
+        },
+        "FunctionName": {
+          "Ref": "metadataStoredFunctionC2AEA409",
+        },
+        "StartingPosition": "LATEST",
+      },
+      "Type": "AWS::Lambda::EventSourceMapping",
+    },
+    "metadataStoredFunctionServiceRole7F877B8D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "lambda.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "ManagedPolicyArns": [
+          {
+            "Fn::Join": [
+              "",
+              [
+                "arn:",
+                {
+                  "Ref": "AWS::Partition",
+                },
+                ":iam::aws:policy/service-role/AWSLambdaBasicExecutionRole",
+              ],
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "metadataStoredFunctionServiceRoleDefaultPolicy87D67872": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": "dynamodb:ListStreams",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "dynamodb:DescribeStream",
+                "dynamodb:GetRecords",
+                "dynamodb:GetShardIterator",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "FileMetadataTableE69EBE66",
+                  "StreamArn",
+                ],
+              },
+            },
+            {
+              "Action": "sns:Publish",
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "FileUploadTopicC783A9A8",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "metadataStoredFunctionServiceRoleDefaultPolicy87D67872",
+        "Roles": [
+          {
+            "Ref": "metadataStoredFunctionServiceRole7F877B8D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+  },
+}
+`;
