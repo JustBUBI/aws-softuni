@@ -1,3 +1,9 @@
+import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
+
+const region = "eu-central-1";
+const snsClient = new SNSClient({ region });
+const allowedFileExtensions = ["pdf", "jpg", "png"];
+
 function extractFileExtension(body: string) {
   // Use a regex to find the filename="..."
   const match = body.match(/filename="([^"]+)"/);
@@ -8,8 +14,6 @@ function extractFileExtension(body: string) {
   }
   return null; // Return null if no filename is found
 }
-
-const allowedFileExtensions = ["pdf", "jpg", "png"];
 
 export const handler = async (event: any) => {
   console.log(event);
@@ -32,8 +36,18 @@ export const handler = async (event: any) => {
   }
 
   if (!allowedFileExtensions.includes(fileExtension)) {
-    // File not allowed -> Notify
-    console.log("NO");
+    // File not allowed -> Notify via SNS
+    try {
+      const snsCommand = new PublishCommand({
+        Message: `File with extension .'${fileExtension}' is not allowed.`,
+        Subject: "Invalid file uploaded.",
+        TopicArn: process.env.TOPIC_ARN,
+      });
+      await snsClient.send(snsCommand);
+      console.log(`Warning sent to SNS.`);
+    } catch (err) {
+      console.error("Error sending message to SNS:", err);
+    }
   } else {
     // File allowed -> Save in Dynamo
     console.log("YES");
@@ -41,6 +55,6 @@ export const handler = async (event: any) => {
 
   return {
     statusCode: 200,
-    body: "Response from Lambda.",
+    body: "File proccessed.",
   };
 };

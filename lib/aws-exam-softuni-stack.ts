@@ -1,5 +1,9 @@
 import * as cdk from "aws-cdk-lib";
-import { CfnRestApi, LambdaIntegration, RestApi } from "aws-cdk-lib/aws-apigateway";
+import {
+  CfnRestApi,
+  LambdaIntegration,
+  RestApi,
+} from "aws-cdk-lib/aws-apigateway";
 import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
 import { Runtime } from "aws-cdk-lib/aws-lambda";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
@@ -19,13 +23,7 @@ export class AwsExamSoftuniStack extends cdk.Stack {
         type: AttributeType.STRING,
       },
       billingMode: BillingMode.PAY_PER_REQUEST,
-    });
-
-    // Lambda functions
-    const fileUploadFunction = new NodejsFunction(this, "fileUploadFunction", {
-      runtime: Runtime.NODEJS_20_X,
-      entry: `${__dirname}/../src/fileUploadFunction.ts`,
-      handler: "handler",
+      timeToLiveAttribute: "ttl",
     });
 
     // SNS topic
@@ -33,7 +31,21 @@ export class AwsExamSoftuniStack extends cdk.Stack {
       displayName: "FileUploadTopic",
     });
     // TODO: Change email to: hristo.zhelev@yahoo.com.
-    fileUploadTopic.addSubscription(new EmailSubscription("lyubomir555@gmail.com"));
+    fileUploadTopic.addSubscription(
+      new EmailSubscription("lyubomir555@gmail.com")
+    );
+
+    // Lambda functions
+    const fileUploadFunction = new NodejsFunction(this, "fileUploadFunction", {
+      runtime: Runtime.NODEJS_20_X,
+      entry: `${__dirname}/../src/fileUploadFunction.ts`,
+      handler: "handler",
+      environment: {
+        TABLE_NAME: fileMetadataTable.tableName,
+        TOPIC_ARN: fileUploadTopic.topicArn,
+      },
+    });
+    fileUploadTopic.grantPublish(fileUploadFunction);
 
     // Api Gateway
     const api = new RestApi(this, "FileUploadApi");
