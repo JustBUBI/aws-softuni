@@ -22,6 +22,7 @@ export class AwsExamSoftuniStack extends cdk.Stack {
         name: "fileExtension",
         type: AttributeType.STRING,
       },
+      sortKey: { name: "id", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       timeToLiveAttribute: "ttl",
     });
@@ -45,7 +46,10 @@ export class AwsExamSoftuniStack extends cdk.Stack {
         TOPIC_ARN: fileUploadTopic.topicArn,
       },
     });
+
+    // Grant permissions
     fileUploadTopic.grantPublish(fileUploadFunction);
+    fileMetadataTable.grantReadWriteData(fileUploadFunction);
 
     // Api Gateway
     const api = new RestApi(this, "FileUploadApi");

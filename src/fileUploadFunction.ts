@@ -1,7 +1,10 @@
+import { DynamoDBClient, PutItemCommand } from "@aws-sdk/client-dynamodb";
 import { PublishCommand, SNSClient } from "@aws-sdk/client-sns";
+import { randomUUID } from "crypto";
 
 const region = "eu-central-1";
 const snsClient = new SNSClient({ region });
+const dynamoClient = new DynamoDBClient({ region });
 const allowedFileExtensions = ["pdf", "jpg", "png"];
 
 function extractFileExtension(body: string) {
@@ -50,7 +53,33 @@ export const handler = async (event: any) => {
     }
   } else {
     // File allowed -> Save in Dynamo
-    console.log("YES");
+    try {
+      // Remove item 30 min after creation
+      const ttl = Math.floor(Date.now() / 1000) + 30 * 60;
+      const dateUploaded = new Date(Date.now());
+      const dynamoItemInput = {
+        TableName: process.env.TABLE_NAME,
+        Item: {
+          fileExtension: {
+            S: fileExtension,
+          },
+          id: {
+            S: randomUUID(),
+          },
+          dateUploaded: {
+            S: dateUploaded.toString(),
+          },
+          ttl: {
+            N: ttl.toString(),
+          },
+        },
+      };
+      const dynamoInsertCommand = new PutItemCommand(dynamoItemInput);
+      await dynamoClient.send(dynamoInsertCommand);
+      console.log(`Metadata stored in Dynamo.`);
+    } catch (err) {
+      console.error("Error writing to Dynamo:", err);
+    }
   }
 
   return {
