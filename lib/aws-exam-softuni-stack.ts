@@ -4,8 +4,9 @@ import {
   LambdaIntegration,
   RestApi,
 } from "aws-cdk-lib/aws-apigateway";
-import { AttributeType, BillingMode, Table } from "aws-cdk-lib/aws-dynamodb";
-import { Runtime } from "aws-cdk-lib/aws-lambda";
+import { AttributeType, BillingMode, StreamViewType, Table } from "aws-cdk-lib/aws-dynamodb";
+import { FilterCriteria, FilterRule, Runtime, StartingPosition } from "aws-cdk-lib/aws-lambda";
+import { DynamoEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { NodejsFunction } from "aws-cdk-lib/aws-lambda-nodejs";
 import { Topic } from "aws-cdk-lib/aws-sns";
 import { EmailSubscription } from "aws-cdk-lib/aws-sns-subscriptions";
@@ -25,6 +26,7 @@ export class AwsExamSoftuniStack extends cdk.Stack {
       sortKey: { name: "id", type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       timeToLiveAttribute: "ttl",
+      stream: StreamViewType.NEW_IMAGE,
     });
 
     // SNS topic
@@ -46,10 +48,30 @@ export class AwsExamSoftuniStack extends cdk.Stack {
         TOPIC_ARN: fileUploadTopic.topicArn,
       },
     });
+    
+    const metadataStoredFunction = new NodejsFunction(this, "metadataStoredFunction", {
+      runtime: Runtime.NODEJS_20_X,
+      entry: `${__dirname}/../src/metadataStoredFunction.ts`,
+      handler: "handler",
+      environment: {
+        TOPIC_ARN: fileUploadTopic.topicArn,
+      },
+    });
+    metadataStoredFunction.addEventSource(
+      new DynamoEventSource(fileMetadataTable, {
+        startingPosition: StartingPosition.LATEST,
+        batchSize: 5,
+        filters: [
+          FilterCriteria.filter({ eventName: FilterRule.isEqual("INSERT") }),
+        ],
+      })
+    );
 
     // Grant permissions
-    fileUploadTopic.grantPublish(fileUploadFunction);
     fileMetadataTable.grantReadWriteData(fileUploadFunction);
+    fileMetadataTable.grantStreamRead(metadataStoredFunction);
+    fileUploadTopic.grantPublish(fileUploadFunction);
+    fileUploadTopic.grantPublish(metadataStoredFunction);
 
     // Api Gateway
     const api = new RestApi(this, "FileUploadApi");
